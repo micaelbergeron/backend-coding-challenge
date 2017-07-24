@@ -1,16 +1,3 @@
-require 'redis'
-require 'redis-asm'
-require 'tsv'
-require 'pry'
-require_relative 'model/geoname'
-
-# Sample config
-REDIS_HOST = ENV['REDIS_HOST'] || 'localhost'
-REDIS_PORT = ENV['REDIS_PORT'] || 6379
-INPUT_FILE = '../data/cities1000.txt'
-DB_LOAD = ENV['DB_LOAD'] == "1"
-DB_FLUSH = ENV['DB_FLUSH'] == "1"
-
 redis = Redis.current
 redis = Redis.new(host: REDIS_HOST, port: REDIS_PORT)
 
@@ -38,5 +25,4 @@ asm = Redis::Asm.new(redis)
 while STDIN.gets
   puts "Searching for #{$_}..."  
   puts asm.search("city:names", $_, MAX_RESULTS=25)
-  
 end
