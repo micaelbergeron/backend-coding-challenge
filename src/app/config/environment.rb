@@ -18,4 +18,8 @@ Bundler.require(Sinatra::Base.environment)  # load all the environment specific 
 if DEBUG
   puts "Debugger is enabled."
   Bundler.require(:debug)
+else
+  def byebug
+    puts "Debugging is disabled, run with DEBUG=1 to enable it."
+  end
 end

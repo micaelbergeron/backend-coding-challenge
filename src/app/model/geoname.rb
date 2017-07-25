@@ -56,6 +56,11 @@ module SinCity
       def distance=(value)
         @distance = value.to_f
       end
+
+      attr_reader :display_name
+      def display_name()
+        "#{name}, #{admin1_code}, #{country_code}" 
+      end
       
       def self.from_a(values)
         raise "Values are not the correct length!" if MAPPINGS.length != values.length

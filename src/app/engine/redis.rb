@@ -8,9 +8,9 @@ module SinCity::Engine
     include SinCity::Engine
 
     @@defaults = {
-      radius: 25,
+      radius: 100,
       distance_unit: 'km',
-      result_count: 10,
+      result_count: 100,
       input_file: INPUT_FILE,
     }
 
@@ -23,6 +23,7 @@ module SinCity::Engine
       #NOTE: This is slow
       @redis.flushall if DB_FLUSH
 
+      import_count = 0
       if DB_LOAD
         TSV[INPUT_FILE].each do |row|
           geo = Geoname.from_a row.to_a
@@ -30,11 +31,13 @@ module SinCity::Engine
           #TODO: keybuilder
           geokey = build_key(geo)
           @redis.mapped_hmset geokey, geo.to_h
-
-          @redis.sadd "city:names", geo.name.downcase
+          @redis.sadd "city:names:#{geo.asciiname.downcase}", geokey
           @redis.geoadd "city:geopos", geo.longitude, geo.latitude, geokey
+          import_count += 1
         end
       end
+
+      puts "Imported #{import_count} rows."
     end
 
     def pre_process(input)
@@ -53,7 +56,7 @@ module SinCity::Engine
     end 
 
     def post_process(input)
-      Hash[ input.map {|k,v| [k.split(':')[1], v]} ]
+      Hash[ input.map {|k,v| [k.split(':')[1], v.to_f]} ]
     end
 
     private

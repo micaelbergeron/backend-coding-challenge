@@ -1,12 +1,12 @@
 module SinCity
   module Engine
 
-    # This is use to stop the pipeline gracefully
+    # This is used to stop the pipeline gracefully
     SKIP = -1
     
-    # Input normalization
-    def pre_process(input)
-      input
+    # Query parsing
+    def pre_process(query)
+      query
     end
     
     # Main process
@@ -14,9 +14,9 @@ module SinCity
       input
     end
 
-    # Output
-    def post_process(input)
-      input
+    # Output sorting and normalization
+    def post_process(output)
+      output
     end
 
     def run(input)
@@ -27,7 +27,6 @@ module SinCity
           self.send(method, output)
         rescue => e
           puts "#{self.class} failed at #{method} with #{output}: #{e}"
-          byebug
           return SKIP
         end
       end
@@ -54,6 +53,14 @@ module SinCity
     end  
 
     Query = Struct.new(:q, :longitude, :latitude)
-  end
+    Proposition = Struct.new(:score, :confidence, :components) do
+      def initialize(*)
+        super
+        self.score ||= 0
+        self.confidence ||= 0
+        self.components ||= []
+      end
+    end
 
+  end
 end

@@ -13,7 +13,7 @@ module SinCity::Engine
 
     @@defaults = {
       distance: 2,
-      result_count: 10,
+      result_count: 100,
       index_file: INDEX_FILE,
       input_file: INPUT_FILE,
       distancer: LevenshteinDamerauDistancer
@@ -28,6 +28,7 @@ module SinCity::Engine
       @tree = BK::Tree.new(@config[:distancer].new)
 
       File.unlink @config[:index_file] if DB_FLUSH and File.exists? @config[:index_file]
+
       begin
         File.open(@config[:index_file], "rb") do |f|
           puts "Found #{@config[:index_file]} index file, importing..."
@@ -37,7 +38,7 @@ module SinCity::Engine
         puts "Reloading data from #{INPUT_FILE}..."
         TSV[@config[:input_file]].each do |row|
           geo = Geoname.from_a row.to_a
-          @tree.add geo.name.downcase, {geonameid: geo.geonameid}
+          @tree.add geo.asciiname.downcase, {geonameid: geo.geonameid}
         end
         puts "Saving the index to disk: #{@config[:index_file]}"
         File.open(@config[:index_file], "wb") { |f| @tree.export(f) }
@@ -52,10 +53,14 @@ module SinCity::Engine
       @tree.query(query, @config[:distance])
     end
 
-    # TODO: get actual data?
+    # sort by levenshtein distance
+    #         first letter index distance
+    #         input length delta
     def post_process(output)      
-      # sort by levenshtein distance, then input length delta
-      sorted = output.sort_by {|k,v| [v[:dist], (@input.length - k.length).abs, k]}
+      sorted = output.sort_by {|k,v| [v[:dist],
+                                      k.index(@input[0]) || k.length,
+                                      (@input.length - k.length).abs,
+                                      k]}
                  .take(@config[:result_count])
                  .map {|k,v| [v[:data][:geonameid], v[:dist]]}
       Hash[sorted]
