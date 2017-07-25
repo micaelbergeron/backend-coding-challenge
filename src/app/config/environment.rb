@@ -4,7 +4,7 @@ require "bundler/setup"
 # Config
 REDIS_HOST = ENV['REDIS_HOST'] || 'localhost'
 REDIS_PORT = ENV['REDIS_PORT'] || 6379
-INPUT_FILE = ENV['INPUT_FILE'] || '../data/cities1000.txt'
+INPUT_FILE = ENV['INPUT_FILE'] || '../data/cities_canada-usa.tsv'
 INDEX_FILE = ENV['INDEX_FILE'] || 'cities.idx'
 ENGINE     = ENV['ENGINE']     || 'redis'
 DB_LOAD    = ENV['DB_LOAD'] == "1"

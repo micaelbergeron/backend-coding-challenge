@@ -7,7 +7,7 @@ gem "kramdown"
 gem "redis"
 gem "redis-asm"
 gem "tsv"
-gem "bk"
+gem "bk", :path => "../lib/bktree"
 
 group :development do
   gem "rack-test"

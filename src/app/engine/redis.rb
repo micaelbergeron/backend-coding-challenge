@@ -1,28 +1,78 @@
-redis = Redis.current
-redis = Redis.new(host: REDIS_HOST, port: REDIS_PORT)
+require 'engine'
+require 'model/geoname'
 
-#NOTE: This is slow
-redis.flushall if DB_FLUSH
+include SinCity::Model
 
-if DB_LOAD
-  TSV[INPUT_FILE].each do |row|
-    geo = Geoname.from_a row.to_a
-    loop unless %w(CA).include? geo.country_code
+module SinCity::Engine
+  class GeoEngine < Base
+    include SinCity::Engine
 
-    #TODO: keybuilder
-    redis.mapped_hmset "city:#{geo.geonameid}", geo.to_h
-    redis.sadd "city:names", geo.name
+    @@defaults = {
+      radius: 25,
+      distance_unit: 'km',
+      result_count: 10,
+      input_file: INPUT_FILE,
+    }
 
-    # GEO?
-    redis.geoadd "city:geopos", geo.longitude, geo.latitude, geo.name
+    def initialize(**args)
+      super(@@defaults.merge(args))
+    end
+
+    def startup
+      super()
+      #NOTE: This is slow
+      @redis.flushall if DB_FLUSH
+
+      if DB_LOAD
+        TSV[INPUT_FILE].each do |row|
+          geo = Geoname.from_a row.to_a
+
+          #TODO: keybuilder
+          geokey = build_key(geo)
+          @redis.mapped_hmset geokey, geo.to_h
+
+          @redis.sadd "city:names", geo.name.downcase
+          @redis.geoadd "city:geopos", geo.longitude, geo.latitude, geokey
+        end
+      end
+    end
+
+    def pre_process(input)
+      return SKIP unless input.latitude && input.longitude
+      input
+    end
+    
+    def process(input)
+      @redis.georadius "city:geopos",
+                       input[:longitude],
+                       input[:latitude],
+                       @config[:radius],
+                       @config[:distance_unit],
+                       "WITHDIST",
+                       "COUNT", @config[:result_count]
+    end 
+
+    def post_process(input)
+      Hash[ input.map {|k,v| [k.split(':')[1], v]} ]
+    end
+
+    private
+
+    def build_key(geoname)
+      "city:#{geoname.geonameid}"
+    end
   end
 end
 
-puts redis.smembers "city:names"
+if ENV['RACK_ENV'] == 'cli'
+  engine = SinCity::Engine::GeoEngine.new
+  engine.startup()
 
-puts "Awaiting request...\n"
-asm = Redis::Asm.new(redis)
-while STDIN.gets
-  puts "Searching for #{$_}..."  
-  puts asm.search("city:names", $_, MAX_RESULTS=25)
+  puts "Awaiting request...\n"
+  while STDIN.gets.chomp
+    long, lat = $_.split(' ')
+    
+    puts "Searching for #{$_}..."  
+    puts engine.run(SinCity::Engine::Query.new(nil, long.to_i, lat.to_i))
+  end
 end

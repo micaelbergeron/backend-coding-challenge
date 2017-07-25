@@ -1,5 +1,3 @@
-require 'pry'
-
 ## 
 # This class represent the schema for geonames entries
 
@@ -47,16 +45,36 @@ MAPPINGS = %i{
   modification_date
 }
 
-klass = Object.const_set "Geoname", Struct.new(*MAPPINGS)
-klass.class_eval do
-  def self.from_a(values)
-    raise 'shit bro that is not right!' if MAPPINGS.length != values.length
-    
-    instance = Geoname.new
-    MAPPINGS.each.with_index do |map, i|
-      instance.send("#{map}=", values[i])
+module SinCity
+  module Model
+
+    klass = Object.const_set "Geoname", Struct.new(*MAPPINGS)
+    klass.class_eval do
+
+      # This can be computed when querying
+      attr_accessor :distance
+      def distance=(value)
+        @distance = value.to_f
+      end
+      
+      def self.from_a(values)
+        raise "Values are not the correct length!" if MAPPINGS.length != values.length
+        
+        instance = Geoname.new
+        MAPPINGS.each.with_index do |map, i|
+          instance.send("#{map}=", values[i])
+        end
+        instance
+      end
+
+      def self.from_h(values)
+        instance = Geoname.new
+        values.each do |k,v|
+          instance.send("#{k}=", v)
+        end
+        instance
+      end
     end
-    instance
+
   end
 end
-
