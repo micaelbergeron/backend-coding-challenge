@@ -40,6 +40,7 @@ module SinCity
           redis: {
             host: REDIS_HOST,
             port: REDIS_PORT,
+            url: REDIS_URL
           }
         }
         @config.merge! args
@@ -47,7 +48,10 @@ module SinCity
       
       # Load the engine
       def startup()
-        @redis = Redis.new(@config[:redis])
+        byebug
+        @redis = Redis.new rescue nil
+        @redis ||= Redis.new(url: @config.dig(:redis, :url)) rescue nil
+        @redis ||= Redis.new(host: @config.dig(:redis, :host), port: @config.dig(:redis, :port))
       end
 
     end  
