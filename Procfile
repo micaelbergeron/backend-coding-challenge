@@ -1,2 +1,2 @@
-web:  ENGINE=all cd src && ruby app/app.rb
+web:  ENGINE=all ruby app/app.rb
 #db:  redis-server
