@@ -9,14 +9,14 @@ gem "redis-asm"
 gem "tsv"
 gem "bk", :path => "lib/bktree"
 
-group :development do
+group :test do
   gem "rack-test"
-  gem "rubocop"
   gem "bacon"
   gem "rspec"
 end
 
-group :debug do
+group :development do
+  gem "rubocop"
   gem "byebug"
   gem "pry-byebug"
 end
