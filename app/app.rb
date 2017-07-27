@@ -28,5 +28,5 @@ get '/suggestions' do
 end
 
 get '/' do
-  "Please add documentation"
+  markdown File.read('README.md')
 end
