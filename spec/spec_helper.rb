@@ -16,6 +16,7 @@
 ENV['RACK_ENV'] = 'test'
 
 require 'config/environment'
+require './spec/samples.rb'
 
 RSpec.configure do |config|
   # rspec-expectations config goes here. You can use an alternate

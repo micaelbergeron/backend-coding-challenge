@@ -5,7 +5,7 @@ require 'config/environment'
 require 'sinatra'
 
 require 'model/geoname'
-require "engine/#{ENGINE}"
+require 'engine/query'
 require 'json'
 
 include SinCity::Engine
@@ -16,7 +16,7 @@ engine.startup()
 set :bind, '0.0.0.0'
 
 get '/suggestions' do
-  content_type :json
+  content_type :json, 'charset' => 'utf-8'
   q = Query.new(params['q'],
                 params['longitude']&.to_f,
                 params['latitude']&.to_f)
@@ -24,5 +24,9 @@ get '/suggestions' do
   results = engine.run(q)
   results = [] if results.equal? SKIP
   
-  results.map(&:to_h).to_json
+  { suggestions: results.map(&:to_h) }.to_json
+end
+
+get '/' do
+  "Please add documentation"
 end

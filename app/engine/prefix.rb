@@ -5,11 +5,17 @@ module SinCity
     class PrefixEngine < Base
       include SinCity::Engine
 
+      # TODO: refactor this into an helper
       def pre_process(query)
-        query.q.downcase
+        return SKIP if query.q.nil?
+        query.q = query.q.chomp.downcase
+        return SKIP if query.q !~ /^\w+/
+
+        query
       end
 
-      def process(input)
+      def process(query)
+        input = query.q
         matches = @redis.keys "city:names:#{input}*"
         return SKIP if matches.length == 0
 
@@ -36,9 +42,19 @@ module SinCity
       end
 
       def post_process(output)
-        sorted = output.sort_by {|k,v| [v, k]} 
-                   .map.with_index {|k,i| [k[0], i]} # the index is what is relevant
-        Hash[sorted]
+        sorted_groups = output.sort_by {|k,dist| [dist, k]} 
+                          .group_by {|k,dist| dist}
+        
+        byebug
+        # basically, we prefixes to have a score sorted from 1..N, (N = #output)
+        # but the same key should yield the same score
+        normalized = {}
+        sorted_groups.each.with_index do |grp, i|
+          _, elems = grp
+          elems.each {|k, _| normalized[k] = i}
+        end
+
+        normalized
       end
     end
   end

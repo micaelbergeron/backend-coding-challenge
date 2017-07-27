@@ -22,6 +22,7 @@ module SinCity
     def run(input)
       # call each method in a pipeline
       %i(pre_process process post_process).inject(input) do |output, method|
+        byebug
         return SKIP if output.equal?(SKIP)
         begin
           self.send(method, output)
@@ -33,6 +34,8 @@ module SinCity
     end
     
     class Base
+      attr_reader :config
+      
       @@loglevel = 0
 
       def initialize(**args)
@@ -48,7 +51,6 @@ module SinCity
       
       # Load the engine
       def startup()
-        byebug
         @redis = Redis.new rescue nil
         @redis ||= Redis.new(url: @config.dig(:redis, :url)) rescue nil
         @redis ||= Redis.new(host: @config.dig(:redis, :host), port: @config.dig(:redis, :port))
