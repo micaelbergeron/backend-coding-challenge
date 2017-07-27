@@ -22,7 +22,6 @@ module SinCity
     def run(input)
       # call each method in a pipeline
       %i(pre_process process post_process).inject(input) do |output, method|
-        byebug
         return SKIP if output.equal?(SKIP)
         begin
           self.send(method, output)
