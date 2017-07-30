@@ -14,6 +14,8 @@ engine = QueryEngine.new
 engine.startup()
 
 set :bind, '0.0.0.0'
+set :public_folder, File.dirname(__FILE__) + '/assets'
+
 
 get '/suggestions' do
   content_type :json, 'charset' => 'utf-8'
@@ -28,5 +30,15 @@ get '/suggestions' do
 end
 
 get '/' do
-  markdown File.read('README.md')
+  markdown File.read('README.md'), :layout_engine => :haml
 end
+
+__END__
+
+@@ layout
+%html
+  %head
+    %link{rel: 'stylesheet', href: '/css/retro.css'}
+  = yield
+
+
