@@ -33,6 +33,7 @@ module SinCity
         rescue => e
           puts e
         end
+        byebug
 
         propositions = {}
 
@@ -67,10 +68,12 @@ module SinCity
           prop.score += score[dist]
         end unless geo.equal?(SKIP)
 
+        normalize = lambda {|_, prop| prop.score = (1.0 - prop.score / max_score)}
+
         # confidence pass and normalization
         propositions.each {|id, prop| prop.score /= prop.confidence }
         max_score = propositions.max_by {|id, prop| prop.score}[1].score
-        propositions.each {|id, prop| prop.score = (1.0 - prop.score / max_score)}
+        propositions.each(&normalize) unless max_score.zero?
           
         Hash[propositions]
       end
